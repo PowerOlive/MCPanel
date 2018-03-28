@@ -64,6 +64,72 @@ class Member extends CI_Controller {
 			];
 		}
 	}
+	public function Register() {
+		$this->load->driver('cache');
+		$username = @$_REQUEST['username'];
+		$password = @$_REQUEST['password'];
+		$lower_name = strtolower($username);
+		if (!preg_match($this->config->config['username_preg'], $lower_name)) {
+			return [
+				'code' => 403,
+				'msg' => 'user.Name.notValid',
+			];
+		}
+		if (strlen($password) > 20 || strlen($password) < 6) {
+			return [
+				'code' => 403,
+				'msg' => 'user.Password.notValid',
+			];
+		}
+		$encrypt_password = hash("sha512", $password);
+		if ($this->UserExists($username)) {
+			return [
+				'code' => 403,
+				'msg' => 'user.Exits',
+			];
+		}
+		$user_data = [
+			'name' => $lower_name,
+			'realname' => $username,
+			'password' => $encrypt_password,
+			'lastip' => $_SERVER['REMOTE_ADDR'],
+			'lastlogin' => time(),
+		];
+		$balance_data = [
+			'username' => $lower_name,
+			'balance' => "0.00",
+			'status' => 0,
+		];
+		$this->db->insert('Balance', $balance_data);
+		$this->db->insert('Member', $user_data);
+
+		$token = md5(uniqid());
+
+		$this->cache->redis->save($lower_name, $token, 3600);
+		$this->cache->redis->save($token, $lower_name, 3600);
+
+		return [
+			'code' => 200,
+			'msg' => "user.Register.success",
+			'token' => $token,
+		];
+	}
+	public function Logout($token) {
+		$this->load->driver('cache');
+		if (!$name = $this->cache->redis->get($token)) {
+			return [
+				'code' => 401,
+				'msg' => 'user.Token.Expired',
+			];
+		} else {
+			$this->cache->redis->delete($token);
+			$this->cache->redis->delete($name);
+			return [
+				'code' => 200,
+				'msg' => 'user.Logout.success',
+			];
+		}
+	}
 	private function UserExists($username = '') {
 		if (@$this->db->select("id,name,realname")->get_where("Member", ['name' => $username])->result()[0]) {
 			return true;
