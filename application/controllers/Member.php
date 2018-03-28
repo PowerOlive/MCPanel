@@ -19,9 +19,9 @@ class Member extends CI_Controller {
 		$this->load->driver('cache');
 
 		if (!$name = $this->cache->redis->get($token)) {
-			exit(json_encode([
+			return [
 				'code' => 401,
-			]));
+			];
 		}
 
 		$user = $this->db->select("id,name,realname")->get_where("Member", ['name' => $name])->result()[0];
@@ -35,28 +35,33 @@ class Member extends CI_Controller {
 		$this->load->driver('cache');
 		$name = strtolower($username);
 		if (!$this->UserExists($name)) {
-			exit(json_encode(['code' => 404]));
+			return [
+				'code' => 404,
+			];
+
 		}
 		if ($this->GetUserData($name)->password !== hash("sha512", $password)) {
-			exit(json_encode(['code' => 403]));
+			return [
+				'code' => 403,
+			];
 		}
 		$token = md5(uniqid());
 		if (!$rtoken = $this->cache->redis->get($name)) {
 			$this->cache->redis->save($name, $token, 3600);
 			$this->cache->redis->save($token, $name, 3600);
-			exit(json_encode([
+			return [
 				'code' => 200,
-				//'msg' => status::LOGIN_SUCCESS,
-				'token' => $token,
-			]));
+				'msg' => "user.Login.success",
+				'token' => $rtoken,
+			];
 		} else {
 			$this->cache->redis->save($name, $rtoken, 3600);
 			$this->cache->redis->save($rtoken, $name, 3600);
-			exit(json_encode([
+			return [
 				'code' => 200,
-				//'msg' => status::LOGIN_SUCCESS,
+				'msg' => "user.Login.success",
 				'token' => $rtoken,
-			]));
+			];
 		}
 	}
 	private function UserExists($username = '') {
