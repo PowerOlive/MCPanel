@@ -1,20 +1,16 @@
 <?php
 class Member extends CI_Controller {
-	// public function get($username = '', $token = '') {
-	// 	$this->load->driver('cache');
-	// 	$name = strtolower($username);
-	// 	if ($this->cache->redis->get($name) !== $token) {
-	// 		exit(json_encode([
-	// 			'code' => 401,
-	// 		]));
-	// 	}
-	// 	$user = $this->db->select("id,name,realname")->get_where("Member", ['name' => $name])->result()[0];
-	// 	$balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
-	// 	$user->id = intval($user->id);
-	// 	$user->balance = $balance->balance;
-	// 	$user->status = 200;
-	// 	exit(json_encode($user));
-	// }
+	/**
+	 * @api GET /Member/getSelf/:token 获取当前用户信息
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"id":1,"name":"kagurazakasatori","realname":"KagurazakaSatori","balance":"2.33","code":200}
+	 * @apiError 401 Token Exipred
+	 * @apiExample json
+	 * {"code":401,"msg":"user.Token.Expired"}
+	 */
 	public function getSelf($token = '') {
 		$this->load->driver('cache');
 
@@ -29,9 +25,20 @@ class Member extends CI_Controller {
 		$balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
 		$user->id = intval($user->id);
 		$user->balance = $balance->balance;
-		$user->status = 200;
+		$user->code = 200;
 		exit(json_encode($user));
 	}
+	/**
+	 * @api GET /Member/Login/:username/:password 登录
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.Login.success","token":"30dfa17547dfa00364e4f94b1756460c"}
+	 * @apiError 403 Wrong Password
+	 * @apiExample json
+	 * {"code":403,"msg":"user.Password.notValid"}
+	 */
 	public function Login($username = '', $password = '') {
 		$this->load->driver('cache');
 		$name = strtolower($username);
@@ -67,6 +74,19 @@ class Member extends CI_Controller {
 			];
 		}
 	}
+	/**
+	 * @api POST /Member/Register 注册
+	 * @apiGroup Member
+	 * @apiParam username string 用户名
+	 * @apiParam password string 密码
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.Register.success","token":"30dfa17547dfa00364e4f94b1756460c"}
+	 * @apiError 403 User Not Exists
+	 * @apiExample json
+	 * {"code":403,"msg":"user.Name.notValid"}
+	 */
 	public function Register() {
 		$this->load->driver('cache');
 		$username = @$_REQUEST['username'];
@@ -117,6 +137,19 @@ class Member extends CI_Controller {
 			'token' => $token,
 		];
 	}
+	/**
+	 * @api POST /Member/ResetPassword/:token 注册
+	 * @apiGroup Member
+	 * @apiParam old_password string 旧密码
+	 * @apiParam new_password string 新密码
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.Password.ResetSuccess"}
+	 * @apiError 401 Token Exipred
+	 * @apiExample json
+	 * {"code":403,"msg":"user.Token.Expired"}
+	 */
 	public function ResetPassword($token = '') {
 		$this->load->driver('cache');
 		$old_password = @$_REQUEST['old_password'];
@@ -155,6 +188,17 @@ class Member extends CI_Controller {
 			'msg' => 'user.Password.ResetSuccess',
 		];
 	}
+	/**
+	 * @api GET /Member/Logout/:token 退出登录
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.Logout.success"}
+	 * @apiError 401 Token Exipred
+	 * @apiExample json
+	 * {"code":403,"msg":"user.Token.Expired"}
+	 */
 	public function Logout($token = '') {
 		$this->load->driver('cache');
 		if (!$name = $this->cache->redis->get($token)) {
