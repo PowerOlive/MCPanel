@@ -21,6 +21,7 @@ class Member extends CI_Controller {
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
+				'msg' => 'user.Token.Expired',
 			];
 		}
 
@@ -37,12 +38,14 @@ class Member extends CI_Controller {
 		if (!$this->UserExists($name)) {
 			return [
 				'code' => 404,
+				'msg' => 'user.NotExists',
 			];
 
 		}
 		if ($this->GetUserData($name)->password !== hash("sha512", $password)) {
 			return [
 				'code' => 403,
+				'msg' => 'user.Password.notValid',
 			];
 		}
 		$token = md5(uniqid());
@@ -52,7 +55,7 @@ class Member extends CI_Controller {
 			return [
 				'code' => 200,
 				'msg' => "user.Login.success",
-				'token' => $rtoken,
+				'token' => $token,
 			];
 		} else {
 			$this->cache->redis->save($name, $rtoken, 3600);
@@ -114,7 +117,45 @@ class Member extends CI_Controller {
 			'token' => $token,
 		];
 	}
-	public function Logout($token) {
+	public function ResetPassword($token = '') {
+		$this->load->driver('cache');
+		$old_password = @$_REQUEST['old_password'];
+		$new_password = @$_REQUEST['new_password'];
+
+		if (!$name = $this->cache->redis->get($token)) {
+			return [
+				'code' => 401,
+				'msg' => 'user.Token.Expired',
+			];
+		}
+		$user_data = $this->GetUserData($name);
+		if ($user_data->password !== hash("sha512", $old_password)) {
+			return [
+				'code' => 403,
+				'msg' => 'user.Password.Wrong',
+			];
+		}
+		if (strlen($new_password) > 20 || strlen($new_password) < 6) {
+			return [
+				'code' => 403,
+				'msg' => 'user.Password.notValid',
+			];
+		}
+		$data = [
+			'password' => hash("sha512", $new_password),
+		];
+		$this->db->where('id', $user_data->id);
+		$this->db->update("Member", $data);
+
+		$this->cache->redis->delete($token);
+		$this->cache->redis->delete($name);
+
+		return [
+			'code' => 200,
+			'msg' => 'user.Password.ResetSuccess',
+		];
+	}
+	public function Logout($token = '') {
 		$this->load->driver('cache');
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
