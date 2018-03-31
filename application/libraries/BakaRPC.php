@@ -1,12 +1,13 @@
 <?php
 class BakaRPC {
-	public $timeout = 3;
+	public $timeout = 2;
 	public $api_address;
 	public $key;
 
-	public function getInstance($api_address = '', $key = '') {
+	public function getInstance($api_address = '', $key = '', $timeout = 2) {
 		$this->api_address = $api_address;
 		$this->key = $key;
+		$this->timeout = $timeout;
 	}
 
 	private function getSign($arr, $secret) {
@@ -32,6 +33,7 @@ class BakaRPC {
 		$headers = array();
 		$headers[] = "Content-Type: application/json";
 		$headers[] = "X-AuthorizeToken: " . $sign;
+		curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$result = curl_exec($ch);
 		if (curl_errno($ch)) {
