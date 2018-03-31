@@ -231,6 +231,56 @@ class Member extends CI_Controller {
 			];
 		}
 	}
+	public function getSkin($token = '', $refresh = false) {
+		$this->load->driver('cache');
+		if (!$username = $this->cache->redis->get($token)) {
+			return [
+				'code' => 401,
+				'msg' => 'user.Token.Expired',
+			];
+		}
+		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
+		$get_session = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
+		$textures = "";
+		$result = [];
+		$result['code'] = 200;
+		if ($this->cache->redis->get(sprintf("%s|skin", $username)) && $refresh == false) {
+			$textures_data = $this->db->select("textures,timestamp")->order_by("timestamp", "DESC")->get_where("Skins", ['username' => $username])->result()[0];
+			$textures = $textures_data->textures;
+			$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
+			$result['no_skin'] = false;
+			$result['cache_hit'] = true;
+			$result['cache_time'] = intval($textures_data->timestamp);
+		} else {
+			$results = $this->fetchAPI(sprintf($get_uuid, $username));
+			switch ($results->code) {
+			case 200:
+				$uuid = json_decode($results->body, true)['id'];
+				$session_data = json_decode($this->fetchAPI(sprintf($get_session, $uuid))->body, true);
+				$textures_url = json_decode(base64_decode($session_data['properties'][0]['value']), true)['textures']['SKIN']['url'];
+				$textures = base64_encode($this->fetchAPI($textures_url)->body);
+				$skin_data = [
+					'textures' => $textures,
+					'timestamp' => time(),
+					'username' => $username,
+				];
+				$this->db->insert('Skins', $skin_data);
+				$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
+				$result['no_skin'] = false;
+				$result['cache_hit'] = false;
+				$result['cache_time'] = $skin_data['timestamp'];
+				break;
+			case 204:
+				$result['code'] = 204;
+				$result['no_skin'] = true;
+				$result['cache_hit'] = false;
+				$result['cache_time'] = time();
+				break;
+			}
+		}
+		$result['textures'] = $textures;
+		return $result;
+	}
 	private function UserExists($username = '') {
 		if (@$this->db->select("id,name,realname")->get_where("Member", ['name' => $username])->result()[0]) {
 			return true;
@@ -241,10 +291,21 @@ class Member extends CI_Controller {
 	private function GetUserData($username = '') {
 		return $this->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
 	}
-
-	private function getSkin() {
-		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
-
+	private function fetchAPI($url) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, []);
+		$data = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		if (curl_errno($ch)) {
+			return false;
+		}
+		$result = (object) [];
+		$result->code = $httpCode;
+		$result->body = $data;
+		return $result;
 	}
 	private function getUserInfo($username = '') {
 		$this->load->library("BakaRPC", null, "rpc");
