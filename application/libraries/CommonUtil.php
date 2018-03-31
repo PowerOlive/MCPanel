@@ -82,4 +82,19 @@ class CommonUtil {
 			return false;
 		}
 	}
+	public function sendMessage($username = '', $content = '') {
+		$this->CI->load->library("BakaRPC", null, "rpc");
+		$this->CI->rpc->getInstance($this->CI->config->config['mcpanel']['url'], $this->CI->config->config['mcpanel']['key']);
+		$result = $this->CI->rpc->APICall([
+			"action" => "Players",
+			"method" => "sendMessage",
+			"username" => $username,
+			"content" => $content,
+		]);
+		if (is_array($result) && isset($result['status'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

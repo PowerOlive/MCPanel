@@ -21,7 +21,7 @@ class BakaRPC {
 			$paramsJoined[] = "$param=$value";
 		}
 		$query = implode('&', $paramsJoined);
-		return $query;
+		return str_replace(" ", "{t}", $query);
 	}
 
 	public function APICall($data) {
