@@ -12,10 +12,10 @@ class BakaRPC {
 
 	private function getSign($arr, $secret) {
 		ksort($arr);
-		return strtoupper(md5($this->Encode($arr) . "@" . $secret));
+		return strtoupper(md5($this->BuildQueryWithoutURLEncode($arr) . "@" . $secret));
 	}
 
-	private function Encode($array) {
+	private function BuildQueryWithoutURLEncode($array) {
 		$paramsJoined = array();
 		foreach ($array as $param => $value) {
 			$paramsJoined[] = "$param=$value";
@@ -28,7 +28,7 @@ class BakaRPC {
 		$sign = $this->getSign($data, $this->key);
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->api_address . "?" . $this->Encode($data));
+		curl_setopt($ch, CURLOPT_URL, $this->api_address . "?" . $this->BuildQueryWithoutURLEncode($data));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$headers = array();
 		$headers[] = "Content-Type: application/json";
