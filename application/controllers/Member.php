@@ -231,6 +231,17 @@ class Member extends CI_Controller {
 			];
 		}
 	}
+	/**
+	 * @api GET /Member/getSkin/:token 获取用户皮肤
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"no_skin":false,"cache_hit":true,"cache_time":1522469253,"textures":"iVBO....."}
+	 * @apiError 204 Skin Not Found
+	 * @apiExample json
+	 * {"code":204,"msg":"user.Skin.notFound","no_skin": true,"cache_hit": false,"cache_time": 1522469253}
+	 */
 	public function getSkin($token = '', $refresh = false) {
 		$this->load->driver('cache');
 		if (!$username = $this->cache->redis->get($token)) {
@@ -274,6 +285,7 @@ class Member extends CI_Controller {
 				$result['code'] = 204;
 				$result['no_skin'] = true;
 				$result['cache_hit'] = false;
+				$result['msg'] = 'user.Skin.notFound';
 				$result['cache_time'] = time();
 				break;
 			}
