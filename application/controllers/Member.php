@@ -138,7 +138,7 @@ class Member extends CI_Controller {
 		];
 	}
 	/**
-	 * @api POST /Member/ResetPassword/:token 注册
+	 * @api POST /Member/ResetPassword/:token 重置密码
 	 * @apiGroup Member
 	 * @apiParam old_password string 旧密码
 	 * @apiParam new_password string 新密码
@@ -224,5 +224,10 @@ class Member extends CI_Controller {
 	}
 	private function GetUserData($username = '') {
 		return $this->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
+	}
+
+	private function getSkin() {
+		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
+
 	}
 }
