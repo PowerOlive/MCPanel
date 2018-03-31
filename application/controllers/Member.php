@@ -13,7 +13,7 @@ class Member extends CI_Controller {
 	 */
 	public function getSelf($token = '') {
 		$this->load->driver('cache');
-
+		$this->load->library("CommonUtil", null, "utils");
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
@@ -26,9 +26,9 @@ class Member extends CI_Controller {
 		$user->id = intval($user->id);
 		$user->balance = $balance->balance;
 		$user->code = 200;
-		$user->online = $this->isOnline($user->realname);
+		$user->online = $this->utils->isOnline($user->realname);
 		if ($user->online) {
-			$user_game_data = $this->getUserInfo($user->realname);
+			$user_game_data = $this->utils->getUserInfo($user->realname);
 			if ($user_game_data) {
 				$user->level = $user_game_data['level'];
 				$user->health = $user_game_data['health'];
@@ -55,21 +55,22 @@ class Member extends CI_Controller {
 	 */
 	public function Login($username = '', $password = '') {
 		$this->load->driver('cache');
+		$this->load->library("CommonUtil", null, "utils");
 		$name = strtolower($username);
-		if (!$this->UserExists($name)) {
+		if (!$this->utils->UserExists($name)) {
 			return [
 				'code' => 404,
 				'msg' => 'user.not_exists',
 			];
 
 		}
-		if ($this->GetUserData($name)->password !== hash("sha512", $password)) {
+		if ($this->utils->GetUserData($name)->password !== hash("sha512", $password)) {
 			return [
 				'code' => 403,
 				'msg' => 'user.password.not_valid',
 			];
 		}
-		$token = $this->create_uuid();
+		$token = $this->utils->create_uuid();
 		if (!$rtoken = $this->cache->redis->get($name)) {
 			$this->cache->redis->save($name, $token, 3600);
 			$this->cache->redis->save($token, $name, 3600);
@@ -103,6 +104,7 @@ class Member extends CI_Controller {
 	 */
 	public function Register() {
 		$this->load->driver('cache');
+		$this->load->library("CommonUtil", null, "utils");
 		$username = @$_REQUEST['username'];
 		$password = @$_REQUEST['password'];
 		$lower_name = strtolower($username);
@@ -119,7 +121,7 @@ class Member extends CI_Controller {
 			];
 		}
 		$encrypt_password = hash("sha512", $password);
-		if ($this->UserExists($username)) {
+		if ($this->utils->UserExists($username)) {
 			return [
 				'code' => 403,
 				'msg' => 'user.exists',
@@ -140,7 +142,7 @@ class Member extends CI_Controller {
 		$this->db->insert('Balance', $balance_data);
 		$this->db->insert('Member', $user_data);
 
-		$token = $this->create_uuid();
+		$token = $this->utils->create_uuid();
 
 		$this->cache->redis->save($lower_name, $token, 3600);
 		$this->cache->redis->save($token, $lower_name, 3600);
@@ -165,6 +167,7 @@ class Member extends CI_Controller {
 	 * {"code":403,"msg":"user.Token.Expired"}
 	 */
 	public function ResetPassword($token = '') {
+		$this->load->library("CommonUtil", null, "utils");
 		$this->load->driver('cache');
 		$old_password = @$_REQUEST['old_password'];
 		$new_password = @$_REQUEST['new_password'];
@@ -175,7 +178,7 @@ class Member extends CI_Controller {
 				'msg' => 'user.token.expired',
 			];
 		}
-		$user_data = $this->GetUserData($name);
+		$user_data = $this->utils->GetUserData($name);
 		if ($user_data->password !== hash("sha512", $old_password)) {
 			return [
 				'code' => 403,
@@ -197,7 +200,7 @@ class Member extends CI_Controller {
 		$this->cache->redis->delete($token);
 		$this->cache->redis->delete($name);
 
-		$this->kickPlayer($name, "由于密码变更,您已被系统强制下线");
+		$this->utils->kickPlayer($name, "由于密码变更,您已被系统强制下线");
 
 		return [
 			'code' => 200,
@@ -243,6 +246,7 @@ class Member extends CI_Controller {
 	 * {"code":204,"msg":"user.Skin.notFound","no_skin": true,"cache_hit": false,"cache_time": 1522469253}
 	 */
 	public function getSkin($token = '', $refresh = false) {
+		$this->load->library("CommonUtil", null, "utils");
 		$this->load->driver('cache');
 		if (!$username = $this->cache->redis->get($token)) {
 			return [
@@ -263,13 +267,13 @@ class Member extends CI_Controller {
 			$result['cache_hit'] = true;
 			$result['cache_time'] = intval($textures_data->timestamp);
 		} else {
-			$results = $this->fetchAPI(sprintf($get_uuid, $username));
+			$results = $this->utils->fetchAPI(sprintf($get_uuid, $username));
 			switch ($results->code) {
 			case 200:
 				$uuid = json_decode($results->body, true)['id'];
-				$session_data = json_decode($this->fetchAPI(sprintf($get_session, $uuid))->body, true);
+				$session_data = json_decode($this->utils->fetchAPI(sprintf($get_session, $uuid))->body, true);
 				$textures_url = json_decode(base64_decode($session_data['properties'][0]['value']), true)['textures']['SKIN']['url'];
-				$textures = base64_encode($this->fetchAPI($textures_url)->body);
+				$textures = base64_encode($this->utils->fetchAPI($textures_url)->body);
 				$skin_data = [
 					'textures' => $textures,
 					'timestamp' => time(),
@@ -292,82 +296,5 @@ class Member extends CI_Controller {
 		}
 		$result['textures'] = $textures;
 		return $result;
-	}
-	private function UserExists($username = '') {
-		if (@$this->db->select("id,name,realname")->get_where("Member", ['name' => $username])->result()[0]) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	private function GetUserData($username = '') {
-		return $this->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
-	}
-	private function fetchAPI($url) {
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, []);
-		$data = curl_exec($ch);
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		if (curl_errno($ch)) {
-			return false;
-		}
-		$result = (object) [];
-		$result->code = $httpCode;
-		$result->body = $data;
-		return $result;
-	}
-	private function getUserInfo($username = '') {
-		$this->load->library("BakaRPC", null, "rpc");
-		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
-		$result = $this->rpc->APICall([
-			"action" => "Players",
-			"method" => "getInfo",
-			"username" => $username,
-		]);
-		if (is_array($result) && isset($result['status'])) {
-			return $result;
-		} else {
-			return false;
-		}
-	}
-	private function isOnline($username = '') {
-		$this->load->library("BakaRPC", null, "rpc");
-		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
-		$result = $this->rpc->APICall([
-			"action" => "Players",
-			"method" => "getOnline",
-		]);
-		if (is_array($result) && in_array($username, $result['online'])) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	private function create_uuid($prefix = "") {
-		$str = md5(uniqid(mt_rand(), true));
-		$uuid = substr($str, 0, 8) . '-';
-		$uuid .= substr($str, 8, 4) . '-';
-		$uuid .= substr($str, 12, 4) . '-';
-		$uuid .= substr($str, 16, 4) . '-';
-		$uuid .= substr($str, 20, 12);
-		return $prefix . $uuid;
-	}
-	private function kickPlayer($username = '', $content = '') {
-		$this->load->library("BakaRPC", null, "rpc");
-		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
-		$result = $this->rpc->APICall([
-			"action" => "Players",
-			"method" => "kickPlayer",
-			"username" => $username,
-			"content" => $content,
-		]);
-		if (is_array($result) && isset($result['status'])) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 }
