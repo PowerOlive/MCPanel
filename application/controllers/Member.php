@@ -26,7 +26,20 @@ class Member extends CI_Controller {
 		$user->id = intval($user->id);
 		$user->balance = $balance->balance;
 		$user->code = 200;
-		exit(json_encode($user));
+		$user->online = $this->isOnline($user->realname);
+
+		$user_game_data = $this->getUserInfo($user->realname);
+		if ($user_game_data) {
+			$user->level = $user_game_data['level'];
+			$user->health = $user_game_data['health'];
+			$user->location = $user_game_data['location'];
+		} else {
+			$user->level = null;
+			$user->health = null;
+			$user->location = [];
+		}
+
+		return $user;
 	}
 	/**
 	 * @api GET /Member/Login/:username/:password 登录
@@ -229,5 +242,32 @@ class Member extends CI_Controller {
 	private function getSkin() {
 		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
 
+	}
+	private function getUserInfo($username = '') {
+		$this->load->library("BakaRPC", null, "rpc");
+		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
+		$result = $this->rpc->APICall([
+			"action" => "Players",
+			"method" => "getInfo",
+			"username" => $username,
+		]);
+		if (is_array($result) && isset($result['status'])) {
+			return $result;
+		} else {
+			return false;
+		}
+	}
+	private function isOnline($username = '') {
+		$this->load->library("BakaRPC", null, "rpc");
+		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
+		$result = $this->rpc->APICall([
+			"action" => "Players",
+			"method" => "getOnline",
+		]);
+		if (is_array($result) && in_array($username, $result['online'])) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

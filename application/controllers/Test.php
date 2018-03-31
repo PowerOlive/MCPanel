@@ -5,8 +5,8 @@ class Test extends CI_Controller {
 		$this->rpc->getInstance("http://127.0.0.1:8000/", "baka2333");
 		$result = $this->rpc->APICall([
 			"action" => "Players",
-			"method" => "getInfo",
-			"username" => "KagurazakaSatori",
+			"method" => "getOnline",
+			// "username" => "KagurazakaSatori",
 			// "content" => "咕噜咕噜",
 		]);
 		return $result;
