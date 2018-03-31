@@ -17,7 +17,7 @@ class Member extends CI_Controller {
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.Token.Expired',
+				'msg' => 'user.login.expired',
 			];
 		}
 
@@ -59,23 +59,23 @@ class Member extends CI_Controller {
 		if (!$this->UserExists($name)) {
 			return [
 				'code' => 404,
-				'msg' => 'user.NotExists',
+				'msg' => 'user.not_exists',
 			];
 
 		}
 		if ($this->GetUserData($name)->password !== hash("sha512", $password)) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Password.notValid',
+				'msg' => 'user.password.not_valid',
 			];
 		}
-		$token = md5(uniqid());
+		$token = $this->create_uuid();
 		if (!$rtoken = $this->cache->redis->get($name)) {
 			$this->cache->redis->save($name, $token, 3600);
 			$this->cache->redis->save($token, $name, 3600);
 			return [
 				'code' => 200,
-				'msg' => "user.Login.success",
+				'msg' => "user.login.success",
 				'token' => $token,
 			];
 		} else {
@@ -83,7 +83,7 @@ class Member extends CI_Controller {
 			$this->cache->redis->save($rtoken, $name, 3600);
 			return [
 				'code' => 200,
-				'msg' => "user.Login.success",
+				'msg' => "user.login.success",
 				'token' => $rtoken,
 			];
 		}
@@ -109,20 +109,20 @@ class Member extends CI_Controller {
 		if (!preg_match($this->config->config['username_preg'], $lower_name)) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Name.notValid',
+				'msg' => 'user.name.not_valid',
 			];
 		}
 		if (strlen($password) > 20 || strlen($password) < 6) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Password.notValid',
+				'msg' => 'user.name.not_valid',
 			];
 		}
 		$encrypt_password = hash("sha512", $password);
 		if ($this->UserExists($username)) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Exits',
+				'msg' => 'user.exists',
 			];
 		}
 		$user_data = [
@@ -140,14 +140,14 @@ class Member extends CI_Controller {
 		$this->db->insert('Balance', $balance_data);
 		$this->db->insert('Member', $user_data);
 
-		$token = md5(uniqid());
+		$token = $this->create_uuid();
 
 		$this->cache->redis->save($lower_name, $token, 3600);
 		$this->cache->redis->save($token, $lower_name, 3600);
 
 		return [
 			'code' => 200,
-			'msg' => "user.Register.success",
+			'msg' => "user.register.success",
 			'token' => $token,
 		];
 	}
@@ -172,20 +172,20 @@ class Member extends CI_Controller {
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.Token.Expired',
+				'msg' => 'user.token.expired',
 			];
 		}
 		$user_data = $this->GetUserData($name);
 		if ($user_data->password !== hash("sha512", $old_password)) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Password.Wrong',
+				'msg' => 'user.password.wrong',
 			];
 		}
 		if (strlen($new_password) > 20 || strlen($new_password) < 6) {
 			return [
 				'code' => 403,
-				'msg' => 'user.Password.notValid',
+				'msg' => 'user.password.not_valid',
 			];
 		}
 		$data = [
@@ -201,7 +201,7 @@ class Member extends CI_Controller {
 
 		return [
 			'code' => 200,
-			'msg' => 'user.Password.ResetSuccess',
+			'msg' => 'user.password.reset_success',
 		];
 	}
 	/**
@@ -220,14 +220,14 @@ class Member extends CI_Controller {
 		if (!$name = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.Token.Expired',
+				'msg' => 'user.token.expired',
 			];
 		} else {
 			$this->cache->redis->delete($token);
 			$this->cache->redis->delete($name);
 			return [
 				'code' => 200,
-				'msg' => 'user.Logout.success',
+				'msg' => 'user.logout.success',
 			];
 		}
 	}
@@ -247,7 +247,7 @@ class Member extends CI_Controller {
 		if (!$username = $this->cache->redis->get($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.Token.Expired',
+				'msg' => 'user.token.expired',
 			];
 		}
 		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
@@ -285,7 +285,7 @@ class Member extends CI_Controller {
 				$result['code'] = 204;
 				$result['no_skin'] = true;
 				$result['cache_hit'] = false;
-				$result['msg'] = 'user.Skin.notFound';
+				$result['msg'] = 'user.skin.not_found';
 				$result['cache_time'] = time();
 				break;
 			}
@@ -345,6 +345,15 @@ class Member extends CI_Controller {
 		} else {
 			return false;
 		}
+	}
+	private function create_uuid($prefix = "") {
+		$str = md5(uniqid(mt_rand(), true));
+		$uuid = substr($str, 0, 8) . '-';
+		$uuid .= substr($str, 8, 4) . '-';
+		$uuid .= substr($str, 12, 4) . '-';
+		$uuid .= substr($str, 16, 4) . '-';
+		$uuid .= substr($str, 20, 12);
+		return $prefix . $uuid;
 	}
 	private function kickPlayer($username = '', $content = '') {
 		$this->load->library("BakaRPC", null, "rpc");
