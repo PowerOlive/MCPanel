@@ -197,6 +197,8 @@ class Member extends CI_Controller {
 		$this->cache->redis->delete($token);
 		$this->cache->redis->delete($name);
 
+		$this->kickPlayer($name, "由于密码变更,您已被系统强制下线");
+
 		return [
 			'code' => 200,
 			'msg' => 'user.Password.ResetSuccess',
@@ -266,6 +268,21 @@ class Member extends CI_Controller {
 			"method" => "getOnline",
 		]);
 		if (is_array($result) && in_array($username, $result['online'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	private function kickPlayer($username = '', $content = '') {
+		$this->load->library("BakaRPC", null, "rpc");
+		$this->rpc->getInstance($this->config->config['mcpanel']['url'], $this->config->config['mcpanel']['key']);
+		$result = $this->rpc->APICall([
+			"action" => "Players",
+			"method" => "kickPlayer",
+			"username" => $username,
+			"content" => $content,
+		]);
+		if (is_array($result) && isset($result['status'])) {
 			return true;
 		} else {
 			return false;
