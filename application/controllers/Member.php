@@ -321,10 +321,10 @@ class Member extends CI_Controller {
 	 */
 	public function getSkin($token = '', $refresh = false) {
 		return [
-			'code' => 401,
-			'msg' => 'user.token.expired',
+			'code' => 404,
+			'msg' => 'server.controller.not_found',
 		];
-
+		//暂时废弃接口
 		$this->load->library("CommonUtil", null, "utils");
 		$this->load->driver('cache');
 		if (!$username = $this->cache->redis->get($token)) {
