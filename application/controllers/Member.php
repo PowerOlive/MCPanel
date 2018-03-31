@@ -27,12 +27,13 @@ class Member extends CI_Controller {
 		$user->balance = $balance->balance;
 		$user->code = 200;
 		$user->online = $this->isOnline($user->realname);
-
-		$user_game_data = $this->getUserInfo($user->realname);
-		if ($user_game_data) {
-			$user->level = $user_game_data['level'];
-			$user->health = $user_game_data['health'];
-			$user->location = $user_game_data['location'];
+		if ($user->online) {
+			$user_game_data = $this->getUserInfo($user->realname);
+			if ($user_game_data) {
+				$user->level = $user_game_data['level'];
+				$user->health = $user_game_data['health'];
+				$user->location = $user_game_data['location'];
+			}
 		} else {
 			$user->level = null;
 			$user->health = null;
