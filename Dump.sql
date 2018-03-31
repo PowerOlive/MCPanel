@@ -22,6 +22,7 @@ CREATE TABLE `Member` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
   `password` text NOT NULL,
+  `skin` int(2) NOT NULL DEFAULT '0',
   `realname` varchar(16) NOT NULL,
   `lastip` varchar(16) NOT NULL,
   `lastlogin` int(11) NOT NULL,
@@ -37,4 +38,3 @@ CREATE TABLE `Skins` (
   `username` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
