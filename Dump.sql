@@ -27,3 +27,14 @@ CREATE TABLE `Member` (
   `lastlogin` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS `Skins`;
+CREATE TABLE `Skins` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `textures` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `timestamp` int(10) NOT NULL,
+  `username` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
