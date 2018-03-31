@@ -534,6 +534,12 @@ $config['mcpanel'] = [
 	"url" => "http://127.0.0.1:8000/",
 	"key" => "baka2333",
 ];
+
+$config['qiniu'] = [
+	'ak' => "sQlIePl2kGBOqx63dbURlS22RP1MiLzGF0QCPrak",
+	'sk' => "GWdRYrGAvphE--3ybkqptV9zcXdn0Baz0UDjgUqe",
+	'bucket' => "satori",
+];
 $config['geetest'] = [
 	'id' => "56dac38548c95c2f47febf148c638399",
 	'key' => "e84faa79ce4048741bb7d51a20c439d0",

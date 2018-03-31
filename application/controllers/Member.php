@@ -21,7 +21,7 @@ class Member extends CI_Controller {
 			];
 		}
 
-		$user = $this->db->select("id,name,realname")->get_where("Member", ['name' => $name])->result()[0];
+		$user = $this->db->select("id,name,lastip,realname")->get_where("Member", ['name' => $name])->result()[0];
 		$balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
 		$user->id = intval($user->id);
 		$user->balance = $balance->balance;
@@ -235,6 +235,66 @@ class Member extends CI_Controller {
 		}
 	}
 	/**
+	 * @api GET /Member/uploadSkin/:token 更新用户皮肤
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.skin.change_success"}
+	 * @apiError 413 Request Entity Too Large
+	 * @apiExample json
+	 * {"code":403,"msg":"user.upload.file_too_big"}
+	 */
+	public function uploadSkin($token) {
+		$this->load->library('Qiniu');
+		$this->load->driver('cache');
+		$this->load->library("CommonUtil", null, "utils");
+		if (!$username = $this->cache->redis->get($token)) {
+			return [
+				'code' => 401,
+				'msg' => 'user.token.expired',
+			];
+		}
+		if (!@$_FILES['skins']) {
+			return [
+				'code' => 404,
+				'msg' => 'user.upload.empty_skin',
+			];
+		}
+		if (mime_content_type($_FILES['skins']['tmp_name']) !== 'image/png') {
+			return [
+				'code' => 403,
+				'msg' => 'user.upload.not_a_png_file',
+			];
+		}
+		if ($_FILES['skins']['size'] > 256000) {
+			return [
+				'code' => 413,
+				'msg' => 'user.upload.file_too_big',
+			];
+		}
+		$username = $this->utils->GetUserData($username)->realname;
+
+		$auth = new Qiniu\Auth($this->config->config['qiniu']['ak'], $this->config->config['qiniu']['sk']);
+		$bucketMgr = new Qiniu\Storage\BucketManager($auth);
+		$file_name = "skins/" . $username . ".png";
+		$token = $auth->uploadToken($this->config->config['qiniu']['bucket'], $file_name, 3600, null, true);
+		$uploadMgr = new Qiniu\Storage\UploadManager();
+
+		list($ret, $err) = $uploadMgr->putFile($token, $file_name, @$_FILES['skins']['tmp_name']);
+		if (!$err) {
+			return [
+				'code' => 200,
+				'msg' => 'user.skin.change_success',
+			];
+		} else {
+			return [
+				'code' => 400,
+				'msg' => $err['error'],
+			];
+		}
+	}
+	/**
 	 * @api GET /Member/getSkin/:token 获取用户皮肤
 	 * @apiGroup Member
 	 *
@@ -245,56 +305,56 @@ class Member extends CI_Controller {
 	 * @apiExample json
 	 * {"code":204,"msg":"user.Skin.notFound","no_skin": true,"cache_hit": false,"cache_time": 1522469253}
 	 */
-	public function getSkin($token = '', $refresh = false) {
-		$this->load->library("CommonUtil", null, "utils");
-		$this->load->driver('cache');
-		if (!$username = $this->cache->redis->get($token)) {
-			return [
-				'code' => 401,
-				'msg' => 'user.token.expired',
-			];
-		}
-		$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
-		$get_session = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
-		$textures = "";
-		$result = [];
-		$result['code'] = 200;
-		if ($this->cache->redis->get(sprintf("%s|skin", $username)) && $refresh == false) {
-			$textures_data = $this->db->select("textures,timestamp")->order_by("timestamp", "DESC")->get_where("Skins", ['username' => $username])->result()[0];
-			$textures = $textures_data->textures;
-			$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
-			$result['no_skin'] = false;
-			$result['cache_hit'] = true;
-			$result['cache_time'] = intval($textures_data->timestamp);
-		} else {
-			$results = $this->utils->fetchAPI(sprintf($get_uuid, $username));
-			switch ($results->code) {
-			case 200:
-				$uuid = json_decode($results->body, true)['id'];
-				$session_data = json_decode($this->utils->fetchAPI(sprintf($get_session, $uuid))->body, true);
-				$textures_url = json_decode(base64_decode($session_data['properties'][0]['value']), true)['textures']['SKIN']['url'];
-				$textures = base64_encode($this->utils->fetchAPI($textures_url)->body);
-				$skin_data = [
-					'textures' => $textures,
-					'timestamp' => time(),
-					'username' => $username,
-				];
-				$this->db->insert('Skins', $skin_data);
-				$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
-				$result['no_skin'] = false;
-				$result['cache_hit'] = false;
-				$result['cache_time'] = $skin_data['timestamp'];
-				break;
-			case 204:
-				$result['code'] = 204;
-				$result['no_skin'] = true;
-				$result['cache_hit'] = false;
-				$result['msg'] = 'user.skin.not_found';
-				$result['cache_time'] = time();
-				break;
-			}
-		}
-		$result['textures'] = $textures;
-		return $result;
-	}
+	// public function getSkin($token = '', $refresh = false) {
+	// 	$this->load->library("CommonUtil", null, "utils");
+	// 	$this->load->driver('cache');
+	// 	if (!$username = $this->cache->redis->get($token)) {
+	// 		return [
+	// 			'code' => 401,
+	// 			'msg' => 'user.token.expired',
+	// 		];
+	// 	}
+	// 	$get_uuid = "https://api.mojang.com/users/profiles/minecraft/%s";
+	// 	$get_session = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
+	// 	$textures = "";
+	// 	$result = [];
+	// 	$result['code'] = 200;
+	// 	if ($this->cache->redis->get(sprintf("%s|skin", $username)) && $refresh == false) {
+	// 		$textures_data = $this->db->select("textures,timestamp")->order_by("timestamp", "DESC")->get_where("Skins", ['username' => $username])->result()[0];
+	// 		$textures = $textures_data->textures;
+	// 		$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
+	// 		$result['no_skin'] = false;
+	// 		$result['cache_hit'] = true;
+	// 		$result['cache_time'] = intval($textures_data->timestamp);
+	// 	} else {
+	// 		$results = $this->utils->fetchAPI(sprintf($get_uuid, $username));
+	// 		switch ($results->code) {
+	// 		case 200:
+	// 			$uuid = json_decode($results->body, true)['id'];
+	// 			$session_data = json_decode($this->utils->fetchAPI(sprintf($get_session, $uuid))->body, true);
+	// 			$textures_url = json_decode(base64_decode($session_data['properties'][0]['value']), true)['textures']['SKIN']['url'];
+	// 			$textures = base64_encode($this->utils->fetchAPI($textures_url)->body);
+	// 			$skin_data = [
+	// 				'textures' => $textures,
+	// 				'timestamp' => time(),
+	// 				'username' => $username,
+	// 			];
+	// 			$this->db->insert('Skins', $skin_data);
+	// 			$this->cache->redis->save(sprintf("%s|skin", $username), "1", 3600);
+	// 			$result['no_skin'] = false;
+	// 			$result['cache_hit'] = false;
+	// 			$result['cache_time'] = $skin_data['timestamp'];
+	// 			break;
+	// 		case 204:
+	// 			$result['code'] = 204;
+	// 			$result['no_skin'] = true;
+	// 			$result['cache_hit'] = false;
+	// 			$result['msg'] = 'user.skin.not_found';
+	// 			$result['cache_time'] = time();
+	// 			break;
+	// 		}
+	// 	}
+	// 	$result['textures'] = $textures;
+	// 	return $result;
+	// }
 }
