@@ -30,6 +30,13 @@ class Bank extends CI_Controller {
 			];
 		}
 		$to_name = strtolower($to);
+		if (!$this->utils->UserExists($to_name)) {
+			return [
+				'code' => 404,
+				'msg' => 'user.not_exists',
+			];
+
+		}
 		$self_balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0]->balance;
 		$to_balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $to_name])->result()[0]->balance;
 
