@@ -170,7 +170,7 @@ class Member extends CI_Controller {
 	 * {"code":200,"msg":"user.Password.ResetSuccess"}
 	 * @apiError 401 Token Exipred
 	 * @apiExample json
-	 * {"code":403,"msg":"user.Token.Expired"}
+	 * {"code":401,"msg":"user.Token.Expired"}
 	 */
 	public function ResetPassword($token = '') {
 		$this->load->library("CommonUtil", null, "utils");
