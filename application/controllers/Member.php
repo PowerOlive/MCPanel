@@ -14,7 +14,7 @@ class Member extends CI_Controller {
 	public function getSelf($token = '') {
 		$this->load->driver('cache');
 		$this->load->library("CommonUtil", null, "utils");
-		if (!$name = $this->cache->redis->get("session|" . $token)) {
+		if (!$name = $this->utils->CheckLogin($token)) {
 			return [
 				'code' => 401,
 				'msg' => 'user.login.expired',
@@ -78,16 +78,16 @@ class Member extends CI_Controller {
 		}
 		$token = $this->utils->create_uuid();
 		if (!$rtoken = $this->cache->redis->get($name)) {
-			$this->cache->redis->save("session|" . $name, "session|" . $token, 3600);
-			$this->cache->redis->save("session|" . $token, $name, 3600);
+			$this->cache->redis->save($name, $token, 3600);
+			$this->cache->redis->save($token, $name, 3600);
 			return [
 				'code' => 200,
 				'msg' => "user.login.success",
 				'token' => $token,
 			];
 		} else {
-			$this->cache->redis->save("session|" . $name, "session|" . $rtoken, 3600);
-			$this->cache->redis->save("session|" . $rtoken, $name, 3600);
+			$this->cache->redis->save($name, $rtoken, 3600);
+			$this->cache->redis->save($rtoken, $name, 3600);
 			return [
 				'code' => 200,
 				'msg' => "user.login.success",
@@ -150,8 +150,8 @@ class Member extends CI_Controller {
 
 		$token = $this->utils->create_uuid();
 
-		$this->cache->redis->save("session|" . $lower_name, "session|" . $token, 3600);
-		$this->cache->redis->save("session|" . $token, "session|" . $lower_name, 3600);
+		$this->cache->redis->save($lower_name, $token, 3600);
+		$this->cache->redis->save($token, $lower_name, 3600);
 
 		return [
 			'code' => 200,
@@ -178,10 +178,10 @@ class Member extends CI_Controller {
 		$old_password = @$_REQUEST['old_password'];
 		$new_password = @$_REQUEST['new_password'];
 
-		if (!$name = $this->cache->redis->get("session|" . $token)) {
+		if (!$name = $this->utils->CheckLogin($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.token.expired',
+				'msg' => 'user.login.expired',
 			];
 		}
 		$user_data = $this->utils->GetUserData($name);
@@ -203,8 +203,8 @@ class Member extends CI_Controller {
 		$this->db->where('id', $user_data->id);
 		$this->db->update("Member", $data);
 
-		$this->cache->redis->delete("session|" . $token);
-		$this->cache->redis->delete("session|" . $name);
+		$this->cache->redis->delete($token);
+		$this->cache->redis->delete($name);
 
 		$this->utils->kickPlayer($name, "由于密码变更,您已被系统强制下线");
 
@@ -226,14 +226,15 @@ class Member extends CI_Controller {
 	 */
 	public function Logout($token = '') {
 		$this->load->driver('cache');
-		if (!$name = $this->cache->redis->get("session|" . $token)) {
+		$this->load->library("CommonUtil", null, "utils");
+		if (!$name = $this->utils->CheckLogin($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.token.expired',
+				'msg' => 'user.login.expired',
 			];
 		} else {
-			$this->cache->redis->delete("session|" . $token);
-			$this->cache->redis->delete("session|" . $name);
+			$this->cache->redis->delete($token);
+			$this->cache->redis->delete($name);
 			return [
 				'code' => 200,
 				'msg' => 'user.logout.success',
@@ -255,10 +256,10 @@ class Member extends CI_Controller {
 		$this->load->library('Qiniu');
 		$this->load->driver('cache');
 		$this->load->library("CommonUtil", null, "utils");
-		if (!$username = $this->cache->redis->get("session|" . $token)) {
+		if (!$username = $this->utils->CheckLogin($token)) {
 			return [
 				'code' => 401,
-				'msg' => 'user.token.expired',
+				'msg' => 'user.login.expired',
 			];
 		}
 		if (!@$_FILES['skins']) {

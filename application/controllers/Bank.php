@@ -23,7 +23,7 @@ class Bank extends CI_Controller {
 
 		$this->load->driver('cache');
 		$this->load->library("CommonUtil", null, "utils");
-		if (!$name = $this->cache->redis->get("session|" . $token)) {
+		if (!$name = $this->utils->CheckLogin($token)) {
 			return [
 				'code' => 401,
 				'msg' => 'user.login.expired',

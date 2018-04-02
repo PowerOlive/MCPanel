@@ -15,6 +15,16 @@ class CommonUtil {
 	public function GetUserData($username = '') {
 		return $this->CI->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
 	}
+	public function CheckLogin($token = '') {
+		$this->CI->load->driver('cache');
+		if (!$name = $this->CI->cache->redis->get($token)) {
+			return false;
+		} elseif (!$this->UserExists($name)) {
+			return false;
+		} else {
+			return $name;
+		}
+	}
 	public function fetchAPI($url) {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
