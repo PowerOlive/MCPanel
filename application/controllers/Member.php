@@ -21,7 +21,7 @@ class Member extends CI_Controller {
 			];
 		}
 
-		$user = $this->db->select("id,name,lastip,realname,skin")->get_where("Member", ['name' => $name])->result()[0];
+		$user = $this->db->select("id,name,lastip,realname,skin,web_name")->get_where("Member", ['name' => $name])->result()[0];
 		$balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
 		$user->id = intval($user->id);
 		$user->balance = $balance->balance;
@@ -240,6 +240,48 @@ class Member extends CI_Controller {
 				'msg' => 'user.logout.success',
 			];
 		}
+	}
+	/**
+	 * @api POST /Member/setName/:token 更新用户名字
+	 * @apiGroup Member
+	 *
+	 * @apiSuccess 200 OK
+	 * @apiExample json
+	 * {"code":200,"msg":"user.name.set_success"}
+	 * @apiError 403 User Name Not Valid
+	 * @apiExample json
+	 * {"code":403,"msg":"user.name.not_valid"}
+	 */
+	public function setName($token) {
+		$this->load->library("CommonUtil", null, "utils");
+		if (!$username = $this->utils->CheckLogin($token)) {
+			return [
+				'code' => 401,
+				'msg' => 'user.login.expired',
+			];
+		}
+		$set_name = @$_POST['name'];
+		if (iconv_strlen($set_name, "UTF-8") > 10) {
+			return [
+				'code' => 403,
+				'msg' => 'user.name.not_valid',
+			];
+		}
+		if ($this->utils->UserNameExists($set_name)) {
+			return [
+				'code' => 403,
+				'msg' => 'user.name.exists',
+			];
+		}
+		$data = [
+			'web_name' => $set_name,
+		];
+		$this->db->where('name', $username);
+		$this->db->update("Member", $data);
+		return [
+			'code' => 200,
+			'msg' => 'user.name.set_success',
+		];
 	}
 	/**
 	 * @api GET /Member/uploadSkin/:token 更新用户皮肤

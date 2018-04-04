@@ -1,14 +1,12 @@
 <template>
-  <div class="wrap">
-    <Header></Header>
-  </div>
+  <layout></layout>
 </template>
 
 <script>
-import Header from './component/header.vue'
+import Layout from './views/layout/Layout.vue'
 export default {
   name: 'app',
-  components: { Header }
+  components: { Layout }
 }
 </script>
 

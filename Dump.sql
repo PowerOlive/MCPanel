@@ -24,6 +24,7 @@ CREATE TABLE `Member` (
   `password` text NOT NULL,
   `skin` int(2) NOT NULL DEFAULT '0',
   `realname` varchar(16) NOT NULL,
+  `web_name` text,
   `lastip` varchar(16) NOT NULL,
   `lastlogin` int(11) NOT NULL,
   PRIMARY KEY (`id`)

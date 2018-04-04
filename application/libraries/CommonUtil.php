@@ -12,6 +12,13 @@ class CommonUtil {
 			return false;
 		}
 	}
+	public function UserNameExists($username = '') {
+		if (@$this->CI->db->select("web_name")->get_where("Member", ['web_name' => $username])->result()[0]) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	public function GetUserData($username = '') {
 		return $this->CI->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
 	}
