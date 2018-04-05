@@ -2,8 +2,7 @@
 class CommonUtil {
 	public $CI;
 	public function __construct() {
-		$CI = &get_instance();
-		$this->CI = $CI;
+		$this->CI = &get_instance();
 	}
 	public function UserExists($username = '') {
 		if (@$this->CI->db->select("id,name,realname")->get_where("Member", ['name' => $username])->result()[0]) {
