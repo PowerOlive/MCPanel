@@ -62,7 +62,7 @@ class Member extends CI_Controller
         return $user;
     }
     /**
-     * @api GET /Member/Login 登录
+     * @api POST /Member/Login 登录
      * @apiGroup Member
      * @apiParam username string 用户名
      * @apiParam password string 密码
