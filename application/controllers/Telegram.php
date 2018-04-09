@@ -41,7 +41,7 @@ class Telegram extends CI_Controller
                 $username = @$this->utils->GetUserDataByTGID($chat_data['uid'])->realname;
                 if (!$username) {
                     return $this->APICall("sendMessage", [
-                        'chat_id' => $chat_data['uid'],
+                        'chat_id' => $chat_data['chat_id'],
                         'text' => "Game Account Not Bind Yet",
                     ]);
                 }
