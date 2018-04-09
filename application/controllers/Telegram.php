@@ -21,7 +21,7 @@ class Telegram extends CI_Controller
                     ]);
                 }
                 $user_data = $this->utils->GetUserData($username);
-                if ($user_data->telegram_uid !== "") {
+                if (!is_null($user_data->telegram_uid)) {
                     return $this->APICall("sendMessage", [
                         'chat_id' => $chat_data['uid'],
                         'text' => "Game Profile: " . $user_data->realname . PHP_EOL . "Status: Already Bind",
