@@ -34,6 +34,10 @@ class CommonUtil
     {
         return $this->CI->db->select("*")->get_where("Member", ['name' => $username])->result()[0];
     }
+    public function GetUserDataByTGID($tg_id = '')
+    {
+        return $this->CI->db->select("*")->get_where("Member", ['telegram_uid' => $tg_id])->result()[0];
+    }
     public function CheckLogin($token = '')
     {
         $this->CI->load->driver('cache');
