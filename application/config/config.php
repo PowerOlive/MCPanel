@@ -531,8 +531,8 @@ $config['timeout'] = 0;
 $config['output_type'] = 'json';
 $config['username_preg'] = "/^[a-zA-Z0-9\p{Han}{3,16}]+$/u";
 $config['mcpanel'] = [
-    "url" => "http://127.0.0.1:8000/",
-    "key" => "baka2333",
+    "url" => "http://219.150.218.122:8000/",
+    "key" => "baka2333@123.",
 ];
 $config['bot_token'] = "bot571826403:AAF5d3Vd28PUTKy3gMBJAa-_WmX-puQ7oGA";
 $config['qiniu'] = [
