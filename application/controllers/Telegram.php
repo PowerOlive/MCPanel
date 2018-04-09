@@ -21,7 +21,8 @@ class Telegram extends CI_Controller
                     ]);
                 }
                 $user_data = $this->utils->GetUserData($username);
-                if ($user_data->telegram_uid !== "") {
+                //var_dump($user_data->telegram_uid);
+		if (!is_null($user_data->telegram_uid)) {
                     return $this->APICall("sendMessage", [
                         'chat_id' => $chat_data['uid'],
                         'text' => "Game Profile: " . $user_data->realname . PHP_EOL . "Status: Already Bind",
@@ -64,7 +65,7 @@ class Telegram extends CI_Controller
     {
         $url = 'https://api.telegram.org/' . $this->config->config['bot_token'] . '/' . $method;
          $option = [
-             'proxy' => '47.90.72.227:8088',
+             'proxy' => '120.51.211.108:8080',
          ];
         $ch = curl_init();
 
