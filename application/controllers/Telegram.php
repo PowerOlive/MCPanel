@@ -38,6 +38,26 @@ class Telegram extends CI_Controller
                     'text' => "Game Profile: " . $user_data->realname . PHP_EOL . "Status: Bind Success",
                 ]);
                 break;
+	case '/getMe':
+                $username = @$this->utils->GetUserDataByTGID($chat_data['uid'])->realname;
+                if (!$username) {
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['uid'],
+                        'text' => "Game Account Not Bind Yet",
+                    ]);
+                }
+                if ($this->utils->isOnline($username)) {
+                    $data = $this->utils->getUserInfo($username);
+                    $message = "Player Name: " . $username . PHP_EOL;
+                    $message .= "Level: " . $data['level'] . PHP_EOL;
+                    $message .= "Health: " . $data['health'] . PHP_EOL;
+                    $message .= "Online: " . $data['online'] ? "Yes" : "No";
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['uid'],
+                        'text' => $message,
+                    ]);
+                }
+                break;
         }
     }
     private function parse_chat_data($data)
