@@ -50,7 +50,7 @@ class Telegram extends CI_Controller
                     $message = "Player Name: " . $username . PHP_EOL;
                     $message .= "Level: " . $data['level'] . PHP_EOL;
                     $message .= "Health: " . $data['health'] . PHP_EOL;
-                    $message .= "Online: " . (true ? "Yes" : "No");
+                    $message .= "Online: " . ($data['online'] ? "Yes" : "No");
                     return $this->APICall("sendMessage", [
                         'chat_id' => $chat_data['uid'],
                         'text' => $message,
