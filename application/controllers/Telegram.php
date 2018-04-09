@@ -43,6 +43,7 @@ class Telegram extends CI_Controller
                     return $this->APICall("sendMessage", [
                         'chat_id' => $chat_data['chat_id'],
                         'text' => "Game Account Not Bind Yet",
+                        'reply_to_message_id' => $chat_data['message_id'],
                     ]);
                 }
                 if ($this->utils->isOnline($username)) {
@@ -53,6 +54,7 @@ class Telegram extends CI_Controller
                     $message .= "Online: " . ($data['online'] ? "Yes" : "No");
                     return $this->APICall("sendMessage", [
                         'chat_id' => $chat_data['chat_id'],
+                        'reply_to_message_id' => $chat_data['message_id'],
                         'text' => $message,
                     ]);
                 }
