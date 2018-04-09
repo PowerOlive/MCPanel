@@ -63,9 +63,9 @@ class Telegram extends CI_Controller
     private function APICall($method = [], $body = [])
     {
         $url = 'https://api.telegram.org/' . $this->config->config['bot_token'] . '/' . $method;
-        // $option = [
-        //     'proxy' => '127.0.0.1:1080',
-        // ];
+         $option = [
+             'proxy' => '47.90.72.227:8088',
+         ];
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -73,7 +73,7 @@ class Telegram extends CI_Controller
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($body));
         curl_setopt($ch, CURLOPT_POST, 1);
         // if (PHP_OS == "Darwin") {
-        //     curl_setopt($ch, CURLOPT_PROXY, $option['proxy']);
+        curl_setopt($ch, CURLOPT_PROXY, $option['proxy']);
         // }
         $result = curl_exec($ch);
         curl_close($ch);
