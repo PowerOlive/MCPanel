@@ -23,7 +23,7 @@ class Member extends CI_Controller
             ];
         }
 
-        $user = $this->db->select("id,name,lastip,realname,skin,web_name")->get_where("Member", ['name' => $name])->result()[0];
+        $user = $this->db->select("id,name,lastip,realname,skin,web_name,telegram_uid")->get_where("Member", ['name' => $name])->result()[0];
         $balance = @$this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
         if (!$balance) {
             $balance_data = [
@@ -110,6 +110,28 @@ class Member extends CI_Controller
                 'code' => 200,
                 'msg' => "user.login.success",
                 'token' => $rtoken,
+            ];
+        }
+    }
+    public function BindTelegram($token)
+    {
+        $this->load->library("CommonUtil", null, "utils");
+        $this->load->driver('cache');
+        if (!$username = $this->utils->CheckLogin($token)) {
+            return [
+                'code' => 401,
+                'msg' => 'user.login.expired',
+            ];
+        }
+        if ($this->utils->UserTelegramBindExists($username)) {
+            return [
+                'code' => 403,
+                'msg' => 'user.telegram.bind_exists',
+            ];
+        } else {
+            return [
+                'code' => 200,
+                'schema' => "tg://resolve?domain=NekoCraftBot&start=",
             ];
         }
     }
