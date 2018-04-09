@@ -24,9 +24,20 @@ class Member extends CI_Controller
         }
 
         $user = $this->db->select("id,name,lastip,realname,skin,web_name")->get_where("Member", ['name' => $name])->result()[0];
-        $balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
+        $balance = @$this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0];
+        if (!$balance) {
+            $balance_data = [
+                'username' => strtolower($name),
+                'balance' => "0.00",
+                'status' => 0,
+            ];
+            $this->db->insert('Balance', $balance_data);
+            $user->balance = "0.00";
+        } else {
+            $user->balance = $balance->balance;
+        }
         $user->id = intval($user->id);
-        $user->balance = $balance->balance;
+
         $user->code = 200;
         if ($user->skin == "0") {
             $user->skin_url = sprintf("https://static.iadata.cn/skins/Steve.png");
