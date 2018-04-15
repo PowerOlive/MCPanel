@@ -57,6 +57,40 @@ class Telegram extends CI_Controller
                         'reply_to_message_id' => $chat_data['message_id'],
                         'text' => $message,
                     ]);
+                } else {
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['chat_id'],
+                        'reply_to_message_id' => $chat_data['message_id'],
+                        'text' => "You Are Not Online",
+                    ]);
+                }
+                break;
+            case '/online':
+                $username = trim($command_arg[1]);
+                if (!$this->utils->UserExists($username)) {
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['chat_id'],
+                        'text' => "User Not Exists",
+                        'reply_to_message_id' => $chat_data['message_id'],
+                    ]);
+                }
+                if ($this->utils->isOnline($username)) {
+                    $data = $this->utils->getUserInfo($username);
+                    $message = "Player Name: " . $username . PHP_EOL;
+                    $message .= "Level: " . $data['level'] . PHP_EOL;
+                    $message .= "Health: " . $data['health'] . PHP_EOL;
+                    $message .= "Online: " . ($data['online'] ? "Yes" : "No");
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['chat_id'],
+                        'reply_to_message_id' => $chat_data['message_id'],
+                        'text' => $message,
+                    ]);
+                } else {
+                    return $this->APICall("sendMessage", [
+                        'chat_id' => $chat_data['chat_id'],
+                        'reply_to_message_id' => $chat_data['message_id'],
+                        'text' => sprintf("Player %s Not Online", $username),
+                    ]);
                 }
                 break;
         }
