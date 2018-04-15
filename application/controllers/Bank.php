@@ -59,8 +59,8 @@ class Bank extends CI_Controller
         $this->db->where('username', $to_name);
         $this->db->update("Balance", $to_transfer);
 
-        // $this->utils->sendMessage($name, '§a[银行] §f 您向 %s 转账了 %s 个 NekoCoin');
-        // $this->utils->sendMessage($to_name, '§a[银行] §f %s 向您转账了 %s 个 NekoCoin');
+        $this->utils->sendMessage($name, '§a[银行] §f 您向 %s 转账了 %s 个 NekoCoin');
+        $this->utils->sendMessage($to_name, '§a[银行] §f %s 向您转账了 %s 个 NekoCoin');
         return [
             'code' => 200,
             'message' => 'user.transfer.success',
