@@ -17,14 +17,34 @@ CREATE TABLE `Balance` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+DELIMITER ;;
+
+CREATE TRIGGER `balance_logs` AFTER UPDATE ON `Balance` FOR EACH ROW
+begin
+insert into BalanceLogs (balance,after_deduction,username,insert_time) values(old.balance,new.balance,new.username,unix_timestamp(now()));
+END;;
+
+DELIMITER ;
+
+DROP TABLE IF EXISTS `BalanceLogs`;
+CREATE TABLE `BalanceLogs` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `balance` float NOT NULL,
+  `after_deduction` float NOT NULL,
+  `username` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `insert_time` int(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 DROP TABLE IF EXISTS `Member`;
 CREATE TABLE `Member` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
   `password` text NOT NULL,
+  `telegram_uid` int(20) DEFAULT NULL,
   `skin` int(2) NOT NULL DEFAULT '0',
   `realname` varchar(16) NOT NULL,
-  `telegram_uid` int(20) DEFAULT NULL,
   `web_name` text,
   `lastip` varchar(16) NOT NULL,
   `lastlogin` int(11) NOT NULL,
