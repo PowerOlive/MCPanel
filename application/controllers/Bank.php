@@ -40,7 +40,15 @@ class Bank extends CI_Controller
         }
         $self_balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $name])->result()[0]->balance;
         $to_balance = $this->db->select("username,balance")->get_where("Balance", ["username" => $to_name])->result()[0]->balance;
-
+        if (!$to_balance) {
+            $balance_data = [
+                'username' => strtolower($to_name),
+                'balance' => "0.00",
+                'status' => 0,
+            ];
+            $this->db->insert('Balance', $balance_data);
+            $to_balance->balance = "0.00";
+        }
         if ($self_balance - $balance < 0 || $balance < 0) {
             return [
                 'code' => 403,
