@@ -11,6 +11,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import FontAwesome from '@fortawesome/fontawesome'
 import FontAwesomeIcon from '@fortawesome/vue-fontawesome'
 import FontAwesomeSolid from '@fortawesome/fontawesome-free-solid'
+
 FontAwesome.library.add(FontAwesomeSolid)
 
 // 引入路由、Vuex、多语言 配置文件

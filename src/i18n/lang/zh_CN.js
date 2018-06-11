@@ -4,6 +4,7 @@ const zh_CN = {
     dashboard: '控制台',
     user: '个人资料',
     skin: '皮肤市场',
+    miner: '算力赞助',
     security: '安全中心',
     s_password: '修改密码',
     s_two_step: '两步验证',

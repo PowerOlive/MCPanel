@@ -6,6 +6,7 @@ Vue.use(VueRouter)
 // 引入路由页面
 import Dashboard from '@/views/dashboard/index.vue'
 import User from '@/views/user/index.vue'
+import Miner from '@/views/miner/index.vue'
 
 export const routerMap = [
   {
@@ -37,6 +38,15 @@ export const routerMap = [
     meta: {
       title: 'skin',
       icon: 'puzzle-piece'
+    }
+  },
+  {
+    path: '/miner',
+    component: Miner,
+    name: 'miner',
+    meta: {
+      title: 'miner',
+      icon: 'coins'
     }
   },
   {
