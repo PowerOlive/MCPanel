@@ -1,5 +1,0 @@
-export { default as Breadcrumb } from './Breadcrumb.vue'
-export { default as DropMenu } from './DropMenu.vue'
-export { default as TabPanel } from './TabPanel.vue'
-export { default as Sidebar } from './Sidebar/index.vue'
-export { default as Copyright } from './Copyright.vue'
