@@ -534,7 +534,7 @@ $config['mcpanel'] = [
 	"url" => "http://127.0.0.1:8000/",
 	"key" => "baka2333@123.",
 ];
-$config['bot_token'] = "bot571826403:AAF5d3Vd28PUTKy3gMBJAa-_WmX-puQ7oGA";
+$config['bot_token'] = "bot609669067:AAHcU_sE0u5VVVZkp3ttFu7f0iGmrwYFdl4";
 $config['qiniu'] = [
 	'ak' => "sQlIePl2kGBOqx63dbURlS22RP1MiLzGF0QCPrak",
 	'sk' => "GWdRYrGAvphE--3ybkqptV9zcXdn0Baz0UDjgUqe",
